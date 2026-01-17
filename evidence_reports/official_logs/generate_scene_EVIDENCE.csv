@@ -1,4 +1,0 @@
-Timestamp,Source_Image,Evidence_Type,Confidence,Location
-2026-01-16T15:47:26.607197,generate_scene,Person (Suspect/Victim),94.70%,"[234, 276, 2296, 840]"
-2026-01-16T15:47:26.607468,generate_scene,Suitcase,92.92%,"[1680, 616, 2706, 1315]"
-2026-01-16T15:47:26.607711,generate_scene,Knife,87.86%,"[1152, 992, 1553, 1370]"

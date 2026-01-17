@@ -18,6 +18,7 @@ class EnsembleEvidenceDetector:
         if os.path.exists(custom_weights):
             print(f"[INIT] Loading Custom Forensic Model ({custom_weights})...")
             self.model_custom = YOLO(custom_weights)
+
         else:
             print(f"[WARNING] Custom weights '{custom_weights}' not found! Gun/Blood detection will be skipped.")
             self.model_custom = None
@@ -27,10 +28,16 @@ class EnsembleEvidenceDetector:
 
         # 1. Standard Model Targets (COCO IDs)
         self.std_classes = {
-            0: "Person", 24: "Backpack", 26: "Handbag",
-            28: "Suitcase", 39: "Bottle", 40: "Wine Glass",
-            41: "Cup", 43: "Knife", 67: "Cell Phone",
-            76: "Scissors", 73: "Laptop"
+            # PERSON
+            0: "Person",
+            # BAGGAGE
+            24: "Backpack", 26: "Handbag", 28: "Suitcase",
+            # KITCHEN / DRUGS / POISON
+            39: "Bottle", 40: "Wine Glass", 41: "Cup", 45: "Bowl",
+            # WEAPONS
+            43: "Knife", 76: "Scissors",
+            # ELECTRONICS (Digital Forensics)
+            67: "Cell Phone", 73: "Laptop", 63: "TV/Monitor", 66: "Keyboard", 64: "Mouse"
         }
 
         # 2. Custom Model Targets (Your Trained IDs)
@@ -201,13 +208,13 @@ class EnsembleEvidenceDetector:
 
 
 # --- EXECUTION ---
-# if __name__ == "__main__":
-#     # Ensure you have 'best.pt' and 'yolov8l.pt'
-#     detector = EnsembleEvidenceDetector(
-#         standard_weights='yolov8l.pt',
-#         custom_weights='Custom_Model/weights/best.pt',
-#     )
-#
-#     INPUT_FOLDER = "crime_scenes/scene_1.png"
-#
-#     detector.process_directory(INPUT_FOLDER)
+if __name__ == "__main__":
+    # Ensure you have 'best.pt' and 'yolov8l.pt'
+    detector = EnsembleEvidenceDetector(
+        standard_weights='yolov8l.pt',
+        custom_weights='Custom_Model/weights/best.pt',
+    )
+
+    INPUT_FOLDER = "crime_scenes/scene_1.png"
+
+    detector.analyze_crime_scene(INPUT_FOLDER)

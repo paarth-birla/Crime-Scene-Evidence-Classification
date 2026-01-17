@@ -15,8 +15,11 @@ def train_custom_model():
 
     results = model.train(
         data='datasets/gun_blood_data/data.yaml',
-        epochs=5,
-        imgsz=640,
+        epochs=10,
+        imgsz=416,
+        cache=True,
+        workers=4,
+        freeze=10,
         batch=16,
         name='gun_blood_model',  # Results saved to runs/detect/gun_blood_model
         patience=10  # Stop early if no improvement
