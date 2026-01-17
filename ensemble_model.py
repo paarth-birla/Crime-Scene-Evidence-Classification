@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import os
 import glob
+import config
 
 
 class EnsembleEvidenceDetector:
@@ -50,11 +51,13 @@ class EnsembleEvidenceDetector:
             "bg_label": (50, 50, 50)  # Dark Grey
         }
 
-    def process_directory(self, input_dir, output_root='ensemble_results'):
+    def process_directory(self, input_dir, output_root=config.OUTPUT_DIR):
         csv_dir = os.path.join(output_root, "evidence_logs")
         visuals_dir = os.path.join(output_root, "visuals")
+        input_dir = os.path.join(output_root, "input")
         os.makedirs(csv_dir, exist_ok=True)
         os.makedirs(visuals_dir, exist_ok=True)
+        os.makedirs(input_dir, exist_ok=True)
 
         image_files = glob.glob(input_dir)
 
@@ -65,19 +68,19 @@ class EnsembleEvidenceDetector:
 
         print(f"\n[COMPLETE] Results saved to '{output_root}/'")
 
-    def _analyze_image(self, image_path, csv_dir, visuals_dir):
-        img = cv2.imread(image_path)
-        if img is None: return
+    def _analyze_image(self, image_path, csv_dir=config.CSV_DIR, visuals_dir=config.VISUALS_DIR):
+        image = cv2.imread(image_path)
+        if image is None: return
         base_name = os.path.splitext(os.path.basename(image_path))[0]
 
         # Get Image Dimensions for Boundary Checks
-        img_h, img_w = img.shape[:2]
+        img_h, img_w = image.shape[:2]
 
         master_log = []
         log_args = {"project": "yolo_internal_logs", "name": "inference", "exist_ok": True}
 
         # --- PASS 1: STANDARD MODEL ---
-        res_std = self.model_standard.predict(img, conf=0.001, iou=0.5, verbose=False, **log_args)[0]
+        res_std = self.model_standard.predict(image, conf=0.001, iou=0.5, verbose=False, **log_args)[0]
         for box in res_std.boxes:
             cls_id = int(box.cls[0])
             if cls_id in self.std_classes:
@@ -90,7 +93,7 @@ class EnsembleEvidenceDetector:
 
         # --- PASS 2: CUSTOM MODEL (Guns/Blood) ---
         if self.model_custom:
-            res_cust = self.model_custom.predict(img, conf=0.001, iou=0.5, verbose=False, **log_args)[0]
+            res_cust = self.model_custom.predict(image, conf=0.001, iou=0.5, verbose=False, **log_args)[0]
             for box in res_cust.boxes:
                 cls_id = int(box.cls[0])
                 if cls_id in self.cust_classes:
@@ -102,7 +105,7 @@ class EnsembleEvidenceDetector:
                     })
 
         # --- PASS 3: PROCESSING & VISUALIZATION ---
-        annotated_img = img.copy()
+        annotated_img = image.copy()
         csv_data = []
 
         for item in master_log:
@@ -194,15 +197,17 @@ class EnsembleEvidenceDetector:
         cv2.imwrite(os.path.join(visuals_dir, f"{base_name}_ANALYSIS.jpg"), annotated_img)
         print(f" > Processed {base_name}: {len(csv_data)} items logged.")
 
+        return annotated_img, csv_data
+
 
 # --- EXECUTION ---
-if __name__ == "__main__":
-    # Ensure you have 'best.pt' and 'yolov8l.pt'
-    detector = EnsembleEvidenceDetector(
-        standard_weights='yolov8l.pt',
-        custom_weights='Custom_Model/weights/best.pt',
-    )
-
-    INPUT_FOLDER = "crime_scenes/*"
-
-    detector.process_directory(INPUT_FOLDER)
+# if __name__ == "__main__":
+#     # Ensure you have 'best.pt' and 'yolov8l.pt'
+#     detector = EnsembleEvidenceDetector(
+#         standard_weights='yolov8l.pt',
+#         custom_weights='Custom_Model/weights/best.pt',
+#     )
+#
+#     INPUT_FOLDER = "crime_scenes/scene_1.png"
+#
+#     detector.process_directory(INPUT_FOLDER)
